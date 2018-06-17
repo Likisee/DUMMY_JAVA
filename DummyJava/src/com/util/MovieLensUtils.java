@@ -1,5 +1,6 @@
 package com.util;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -31,9 +32,13 @@ public class MovieLensUtils {
 	private static String filenameTags = "tags.csv";
 
 	public static ArrayList<MovieLensMovieVo> parseMovieLensMovie(String filePath) {
+		return parseMovieLensMovie(new File(filePath));
+	}
+	
+	public static ArrayList<MovieLensMovieVo> parseMovieLensMovie(File file) {
 		ArrayList<MovieLensMovieVo> result = new ArrayList<MovieLensMovieVo>();
 		try {
-			CSVReader reader = new CSVReader(new FileReader(filePath), ',', '"', 1);
+			CSVReader reader = new CSVReader(new FileReader(file), ',', '"', 1);
 
 			// Set column mapping strategy
 			CsvToBean csv = new CsvToBean();
@@ -55,9 +60,13 @@ public class MovieLensUtils {
 	}
 
 	public static ArrayList<MovieLensLinkVo> parseMovieLensLink(String filePath) {
+		return parseMovieLensLink(new File(filePath));
+	}
+
+	public static ArrayList<MovieLensLinkVo> parseMovieLensLink(File file) {
 		ArrayList<MovieLensLinkVo> result = new ArrayList<MovieLensLinkVo>();
 		try {
-			CSVReader reader = new CSVReader(new FileReader(filePath), ',', '"', 1);
+			CSVReader reader = new CSVReader(new FileReader(file), ',', '"', 1);
 
 			// Set column mapping strategy
 			CsvToBean csv = new CsvToBean();
@@ -79,9 +88,13 @@ public class MovieLensUtils {
 	}
 
 	public static ArrayList<MovieLensRatingVo> parseMovieLensRating(String filePath) {
+		return parseMovieLensRating(new File(filePath));
+	}
+	
+	public static ArrayList<MovieLensRatingVo> parseMovieLensRating(File file) {
 		ArrayList<MovieLensRatingVo> result = new ArrayList<MovieLensRatingVo>();
 		try {
-			CSVReader reader = new CSVReader(new FileReader(filePath), ',', '"', 1);
+			CSVReader reader = new CSVReader(new FileReader(file), ',', '"', 1);
 
 			// Set column mapping strategy
 			CsvToBean csv = new CsvToBean();
@@ -103,9 +116,13 @@ public class MovieLensUtils {
 	}
 
 	public static ArrayList<MovieLensTagVo> parseMovieLensTag(String filePath) {
+		return parseMovieLensTag(new File(filePath));
+	}
+	
+	public static ArrayList<MovieLensTagVo> parseMovieLensTag(File file) {
 		ArrayList<MovieLensTagVo> result = new ArrayList<MovieLensTagVo>();
 		try {
-			CSVReader reader = new CSVReader(new FileReader(filePath), ',', '"', 1);
+			CSVReader reader = new CSVReader(new FileReader(file), ',', '"', 1);
 
 			// Set column mapping strategy
 			CsvToBean csv = new CsvToBean();
