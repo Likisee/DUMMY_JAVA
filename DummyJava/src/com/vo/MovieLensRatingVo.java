@@ -13,6 +13,19 @@ public class MovieLensRatingVo implements Serializable {
 	private String timestamp;
 	private Date date;
 
+	public MovieLensRatingVo() {
+		super();
+	}
+	
+	public MovieLensRatingVo(String userId, String movieId, String rating, String timestamp) {
+		super();
+		this.userId = userId;
+		this.movieId = movieId;
+		this.rating = rating;
+		this.timestamp = timestamp;
+		this.date = new Date(Long.valueOf(timestamp) * 1000);
+	}
+
 	public String getUserId() {
 		return userId;
 	}

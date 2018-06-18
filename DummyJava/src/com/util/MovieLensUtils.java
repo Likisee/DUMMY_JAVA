@@ -31,6 +31,10 @@ public class MovieLensUtils {
 	private static String filenameRatings = "ratings.csv";
 	private static String filenameTags = "tags.csv";
 
+	// ========================================================================
+	// Movie
+	// ========================================================================
+	
 	public static ArrayList<MovieLensMovieVo> parseMovieLensMovie(String filePath) {
 		return parseMovieLensMovie(new File(filePath));
 	}
@@ -58,6 +62,10 @@ public class MovieLensUtils {
 		}
 		return result;
 	}
+	
+	// ========================================================================
+	// Link
+	// ========================================================================
 
 	public static ArrayList<MovieLensLinkVo> parseMovieLensLink(String filePath) {
 		return parseMovieLensLink(new File(filePath));
@@ -86,11 +94,15 @@ public class MovieLensUtils {
 		}
 		return result;
 	}
+	
+	// ========================================================================
+	// Rating (maybe a large-size file)
+	// ========================================================================
 
 	public static ArrayList<MovieLensRatingVo> parseMovieLensRating(String filePath) {
 		return parseMovieLensRating(new File(filePath));
 	}
-	
+
 	public static ArrayList<MovieLensRatingVo> parseMovieLensRating(File file) {
 		ArrayList<MovieLensRatingVo> result = new ArrayList<MovieLensRatingVo>();
 		try {
@@ -115,6 +127,10 @@ public class MovieLensUtils {
 		return result;
 	}
 
+	// ========================================================================
+	// Tag
+	// ========================================================================
+	
 	public static ArrayList<MovieLensTagVo> parseMovieLensTag(String filePath) {
 		return parseMovieLensTag(new File(filePath));
 	}
@@ -156,10 +172,9 @@ public class MovieLensUtils {
 			// Default seperator is comma
 			// Default quote character is double quote
 			// Start reading from line number 2 (line numbers start from zero)
-			CSVReader reader = new CSVReader(new FileReader(dataMovieLendsSmall + filenameLinks), ',', '"', 1);
-//			CSVReader reader = new CSVReader(new FileReader(FileUtils.getFilePath("E:", "DataSet", "#Running", "MovieLens Latest Datasets", "ml-latest-small", filenameLinks)), ',', '"', 1);
+			CSVReader reader = new CSVReader(new FileReader(dataMovieLendsFull + filenameRatings), ',', '"', 1);
 
-			// Method 1
+			// Method 1 (faster for large-size file)
 			// Read CSV line by line and use the string array as you want
 //			String[] nextLine;
 //			while ((nextLine = reader.readNext()) != null) {
@@ -176,19 +191,19 @@ public class MovieLensUtils {
 //			}
 
 			// Method 3
-			CsvToBean csv = new CsvToBean();
-
-			// Set column mapping strategy
-			ColumnPositionMappingStrategy strategy = new ColumnPositionMappingStrategy();
-			strategy.setType(MovieLensLinkVo.class);
-			String[] columns = new String[] { "movieId", "imdbId", "tmdbId"};
-			strategy.setColumnMapping(columns);
-			
-			List list = csv.parse(strategy, reader);
-			for (Object object : list) {
-				MovieLensLinkVo link = (MovieLensLinkVo) object;
-				System.out.println(link);
-			}
+//			CsvToBean csv = new CsvToBean();
+//
+//			// Set column mapping strategy
+//			ColumnPositionMappingStrategy strategy = new ColumnPositionMappingStrategy();
+//			strategy.setType(MovieLensRatingVo.class);
+//			String[] columns = new String[] { "userId", "movieId", "rating", "timestamp"};
+//			strategy.setColumnMapping(columns);
+//			
+//			List list = csv.parse(strategy, reader);
+//			for (Object object : list) {
+//				MovieLensRatingVo link = (MovieLensRatingVo) object;
+//				System.out.println(link);
+//			}
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
