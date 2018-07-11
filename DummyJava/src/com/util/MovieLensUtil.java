@@ -18,9 +18,9 @@ import com.vo.MovieLensMovieVo;
 import com.vo.MovieLensRatingVo;
 import com.vo.MovieLensTagVo;
 
-public class MovieLensUtils {
+public class MovieLensUtil {
 
-	private static Log logger = LogFactory.getLog(MovieLensUtils.class);
+	private static Log logger = LogFactory.getLog(MovieLensUtil.class);
 
 	private static String dataRoot = "E:\\DataSet\\#Running\\";
 	private static String dataMovieLendsSmall = dataRoot + "MovieLens Latest Datasets\\ml-latest-small\\";

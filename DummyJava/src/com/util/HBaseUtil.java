@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class StringUtils {
+public class HBaseUtil {
 
-	private static Log logger = LogFactory.getLog(StringUtils.class);
+	private static Log logger = LogFactory.getLog(HBaseUtil.class);
 
-	public final static String commonSep = ",";
-	public final static String commonDelim = ",";
+	public final static String hbaseSep = "~|";
+	public final static String hbaseDelim = "~\\|";
 
 	// ========================================================================
 	// getStringConcate
@@ -20,13 +20,13 @@ public class StringUtils {
 		StringBuffer result = new StringBuffer();
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
-			if (arg.endsWith(commonSep)) {
+			if (arg.endsWith(hbaseSep)) {
 				result.append(arg);
 			} else {
-				result.append(arg + commonSep);
+				result.append(arg + hbaseSep);
 			}
 		}
-		return result.toString().substring(0, result.toString().length() - 1);
+		return result.toString();
 	}
 
 	// ========================================================================
@@ -36,7 +36,7 @@ public class StringUtils {
 	public static ArrayList<String> getStringSplit(String str) {
 		ArrayList<String> result = new ArrayList<String>();
 		if (str != null) {
-			String[] strArr = str.split(commonDelim);
+			String[] strArr = str.split(hbaseDelim);
 			for (int i = 0; i < strArr.length; i++) {
 				result.add(strArr[i]);
 			}

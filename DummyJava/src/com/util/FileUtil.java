@@ -10,9 +10,9 @@ import java.io.InputStreamReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class FileUtils {
+public class FileUtil {
 
-	private static Log logger = LogFactory.getLog(FileUtils.class);
+	private static Log logger = LogFactory.getLog(FileUtil.class);
 
 	public final static String fileSep = File.separator;
 	public final static String fileDelim = File.separator;
