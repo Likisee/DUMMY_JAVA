@@ -4,8 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,25 +47,78 @@ public class FileUtil {
 	// ========================================================================
 	// writeStringToFile
 	// ========================================================================
-	public static String writeStringToFile(File file, String content) {
-		String absoluteFile = "";
+	public static boolean writeStringToFile(File file, String content) {
 		try {
-			org.apache.commons.io.FileUtils.writeStringToFile(file, content, "UTF-8");
+			org.apache.commons.io.FileUtils.writeStringToFile(file, content, "UTF-8", false);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return false;
 		}
-		return absoluteFile;
+		return true;
 	}
 
-	public static String writeStringToFile(String filePath, String content) {
+	public static boolean writeStringToFile(String filePath, String content) {
 		return writeStringToFile(new File(filePath), content);
 	}
 
-	public static String writeStringToFile(String fileFolder, String filename, String content) {
+	public static boolean writeStringToFile(String fileFolder, String filename, String content) {
 		return writeStringToFile(new File(fileFolder + File.separator + filename), content);
 	}
 
+	// ========================================================================
+	// readFileAsObject
+	// ========================================================================
+	public static Object readFileAsObject(File file) {
+		Object content = "";
+		try {
+			FileInputStream fin = new FileInputStream(file);
+			ObjectInputStream objectinputstream = new ObjectInputStream(fin);
+			content = objectinputstream.readObject();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return content;
+	}
+
+	public static Object readFileAsObject(String filePath) {
+		return readFileAsString(new File(filePath));
+	}
+
+	public static Object readFileAsObject(String fileFolder, String filename) {
+		return readFileAsString(new File(fileFolder + File.separator + filename));
+	}
+
+	// ========================================================================
+	// writeObjectToFile
+	// ========================================================================
+	public static boolean writeObjectToFile(File file, Object content) {
+		try {
+			FileOutputStream fout = new FileOutputStream(file, false);
+			ObjectOutputStream oos = new ObjectOutputStream(fout);
+			oos.writeObject(content);
+			oos.close();
+			fout.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean writeObjectToFile(String filePath, String content) {
+		return writeStringToFile(new File(filePath), content);
+	}
+
+	public static boolean writeObjectToFile(String fileFolder, String filename, String content) {
+		return writeStringToFile(new File(fileFolder + File.separator + filename), content);
+	}
+	
 	// ========================================================================
 	// printFileAsString
 	// ========================================================================

@@ -3,6 +3,7 @@ package com.util;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -123,6 +124,24 @@ public class MovieLensUtil {
 
 		} catch (FileNotFoundException e) {
 			logger.error("MovieLensUtils.parseMovieLensRating Error: " + e.getMessage());
+		}
+		return result;
+	}
+	
+	public static ArrayList<MovieLensRatingVo> parseMovieLensRating(String directoryPath, String date, int daysPres, int daysAfter) {
+		ArrayList<MovieLensRatingVo> result = new ArrayList<MovieLensRatingVo>();
+		ArrayList<MovieLensRatingVo> resultTemp = null;
+		int now = (int) TimeUtil.parseByDefaultSimpleDateTime(date).getTime() / 1000 / 60 / 60 / 24;
+		int nowPres = now - daysPres;
+		int nowAfter = now + daysAfter;
+		SimpleDateFormat sdf = TimeUtil.getSimpleDateTime(null);
+		File file = null;
+		for (int i = nowPres; i <= nowAfter; i++) {
+			file = new File(directoryPath + sdf.format(TimeUtil.getIntDateToDate(i)));
+			if(file.exists()) {
+				resultTemp = parseMovieLensRating(file);
+				result.addAll(resultTemp);
+			}
 		}
 		return result;
 	}

@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -16,6 +18,8 @@ import org.apache.commons.logging.LogFactory;
 
 import au.com.bytecode.opencsv.CSVReader;
 
+import com.constant.Const;
+import com.util.CollectionUtil;
 import com.util.FileUtil;
 import com.util.StringUtil;
 import com.util.TimeUtil;
@@ -34,6 +38,9 @@ public class MovieLensStatReport {
 	private static String filenameMovies = "movies.csv";
 	private static String filenameRatings = "ratings.csv";
 	private static String filenameTags = "tags.csv";
+	
+	private static String userIdListResult = "userIdList.result";
+	private static String movieIdListResult = "userIdList.result";
 
 	private static void exportTopRatingUserId(String filePath) {
 		HashMap<String, Integer> mapUserIdCnt = new HashMap<String, Integer>();
@@ -97,7 +104,7 @@ public class MovieLensStatReport {
 			userIdList = entry.getValue();
 			for (int i = 0; i < userIdList.size(); i++) {
 				userId = userIdList.get(i);
-				sbResult.append(userId + "," + count + "," + mapUserMinTimestamp.get(userId) + "," + sdf.format(mapUserMinTimestamp.get(userId) * 1000) + "," + mapUserMaxTimestamp.get(userId) + "," + sdf.format(mapUserMaxTimestamp.get(userId) * 1000) + "," + "\r\n");
+				sbResult.append(userId + Const.csvSep + count + Const.csvSep + mapUserMinTimestamp.get(userId) + Const.csvSep + sdf.format(mapUserMinTimestamp.get(userId) * 1000) + Const.csvSep + mapUserMaxTimestamp.get(userId) + Const.csvSep + sdf.format(mapUserMaxTimestamp.get(userId) * 1000) + Const.csvSep + Const.lineBrakeSep);
 			}
 		}
 
@@ -168,7 +175,7 @@ public class MovieLensStatReport {
 			movieIdList = entry.getValue();
 			for (int i = 0; i < movieIdList.size(); i++) {
 				movieId = movieIdList.get(i);
-				sbResult.append(movieId + "," + count + "," + mapMovieMinTimestamp.get(movieId) + "," + sdf.format(mapMovieMinTimestamp.get(movieId) * 1000) + "," + mapMovieMaxTimestamp.get(movieId) + "," + sdf.format(mapMovieMaxTimestamp.get(movieId) * 1000) + "," + "\r\n");
+				sbResult.append(movieId + Const.csvSep + count + Const.csvSep + mapMovieMinTimestamp.get(movieId) + Const.csvSep + sdf.format(mapMovieMinTimestamp.get(movieId) * 1000) + Const.csvSep + mapMovieMaxTimestamp.get(movieId) + Const.csvSep + sdf.format(mapMovieMaxTimestamp.get(movieId) * 1000)  + Const.csvSep +  Const.lineBrakeSep);
 			}
 		}
 
@@ -192,10 +199,10 @@ public class MovieLensStatReport {
 					date = sdf.format(timestamp * 1000);
 
 					if (mapDateRatings.containsKey(date)) {
-						mapDateRatings.get(date).append(StringUtil.getStringArray2Csv(nextLine) + StringUtil.lineBrakeSep);
+						mapDateRatings.get(date).append(StringUtil.getStringArray2Csv(nextLine) + Const.lineBrakeSep);
 					} else {
 						StringBuffer sb = new StringBuffer();
-						sb.append(StringUtil.getStringArray2Csv(nextLine) + StringUtil.lineBrakeSep);
+						sb.append(StringUtil.getStringArray2Csv(nextLine) + Const.lineBrakeSep);
 						mapDateRatings.put(date, sb);
 					}
 				}
@@ -212,36 +219,280 @@ public class MovieLensStatReport {
 			filename = entry.getKey();
 			content = entry.getValue().toString();
 			File fileExport = new File(file.getParent() + File.separator + dataExport + "RatingsByDate" + File.separator + filename + ".csv");
-			FileUtil.writeStringToFile(fileExport, content);
+			FileUtil.writeStringToFile(fileExport, "userId,movieId,rating,timestamp," + Const.lineBrakeSep + content);
+		}
+	}
+	
+	private static ArrayList<Integer> loadUserIdList(String filePath) {
+		ArrayList<Integer> userIdList = new ArrayList<Integer>();
+		File file = new File(filePath);
+		File fileExport = new File(file.getParent() + File.separator + dataExport + userIdListResult);
+		if (!fileExport.exists()) {
+			try {
+				CSVReader reader = new CSVReader(new FileReader(filePath), ',', '"', 1);
+				String[] nextLine;
+				Integer userId;
+				SimpleDateFormat sdf = TimeUtil.getSimpleDateTime(null);
+				String date;
+				while ((nextLine = reader.readNext()) != null) {
+					if (nextLine != null) {
+
+						userId = Integer.valueOf(nextLine[0]);
+						userIdList.add(userId);
+					}
+				}
+				CollectionUtil.getIntegerArrayListSortWithoutDuplication(userIdList);
+				FileUtil.writeObjectToFile(fileExport, userIdList);
+			} catch (FileNotFoundException e) {
+				logger.error("MovieLensStatReport.loadUserIdList Error: " + e.getMessage());
+			} catch (IOException e) {
+				logger.error("MovieLensStatReport.loadUserIdList Error: " + e.getMessage());
+			}
+		}
+		userIdList = (ArrayList<Integer>) FileUtil.readFileAsObject(fileExport);
+		return userIdList;
+	}
+
+	private static ArrayList<Integer> loadMovieIdList(String filePath) {
+		ArrayList<Integer> movieIdList = new ArrayList<Integer>();
+		File file = new File(filePath);
+		File fileExport = new File(file.getParent() + File.separator + dataExport + movieIdListResult);
+		if (!fileExport.exists()) {
+			try {
+				CSVReader reader = new CSVReader(new FileReader(filePath), ',', '"', 1);
+				String[] nextLine;
+				Integer movieId;
+				SimpleDateFormat sdf = TimeUtil.getSimpleDateTime(null);
+				String date;
+				while ((nextLine = reader.readNext()) != null) {
+					if (nextLine != null) {
+
+						movieId = Integer.valueOf(nextLine[1]);
+						movieIdList.add(movieId);
+					}
+				}
+				CollectionUtil.getIntegerArrayListSortWithoutDuplication(movieIdList);
+				FileUtil.writeObjectToFile(fileExport, movieIdList);
+			} catch (FileNotFoundException e) {
+				logger.error("MovieLensStatReport.loadMovieIdList Error: " + e.getMessage());
+			} catch (IOException e) {
+				logger.error("MovieLensStatReport.loadMovieIdList Error: " + e.getMessage());
+			}
+		}
+		movieIdList = (ArrayList<Integer>) FileUtil.readFileAsObject(fileExport);
+		return movieIdList;
+	}
+	
+	private static HashMap<Integer, HashSet<Integer>> loadRatinsMapUserId2MovieId(String filePath, ArrayList<Integer> userIdList, Date now, Integer daysPre, Integer daysAfter) {
+		HashMap<Integer, HashSet<Integer>> mapUserId2MovieId = new HashMap<Integer, HashSet<Integer>>();
+
+		// initiate mapUserId2MovieId
+		Integer userId;
+		Integer movieId;
+		for (int i = 0; i < userIdList.size(); i++) {
+			userId = userIdList.get(i);
+			mapUserId2MovieId.put(userId, new HashSet<Integer>());
 		}
 
+		// collect fileList
+		ArrayList<File> fileList = new ArrayList<File>();
+		File file = null;
+		if (now == null || daysPre == null || daysAfter == null) {
+			file = new File(filePath);
+			fileList.add(file);
+		} else {
+			// TODO
+			// TODO
+			// TODO
+		}
+
+		// parse fileList
+		for (int i = 0; i < fileList.size(); i++) {
+			file = fileList.get(i);
+			if (file.exists()) {
+				try {
+					CSVReader reader = new CSVReader(new FileReader(file), ',', '"', 1);
+					String[] nextLine;
+					while ((nextLine = reader.readNext()) != null) {
+						if (nextLine != null) {
+							userId = Integer.valueOf(nextLine[0]);
+							movieId = Integer.valueOf(nextLine[1]);
+							mapUserId2MovieId.get(userId).add(movieId);
+						}
+					}
+				} catch (FileNotFoundException e) {
+					logger.error("MovieLensStatReport.loadMovieIdList Error: " + e.getMessage());
+				} catch (IOException e) {
+					logger.error("MovieLensStatReport.loadMovieIdList Error: " + e.getMessage());
+				}
+			}
+		}
+		return mapUserId2MovieId;
+	}
+	
+	private static HashMap<Integer, HashSet<Integer>> loadRatinsMapMovieId2UserId(String filePath, ArrayList<Integer> movieIdList, Date now, Integer daysPre, Integer daysAfter) {
+		HashMap<Integer, HashSet<Integer>> mapMovieId2UserId = new HashMap<Integer, HashSet<Integer>>();
+
+		// initiate mapMovieId2UserId
+		Integer userId;
+		Integer movieId;
+		for (int i = 0; i < movieIdList.size(); i++) {
+			movieId = movieIdList.get(i);
+			mapMovieId2UserId.put(movieId, new HashSet<Integer>());
+		}
+
+		// collect fileList
+		ArrayList<File> fileList = new ArrayList<File>();
+		File file = null;
+		if (now == null || daysPre == null || daysAfter == null) {
+			file = new File(filePath);
+			fileList.add(file);
+		} else {
+			// TODO
+			// TODO
+			// TODO
+		}
+
+		// parse fileList
+		for (int i = 0; i < fileList.size(); i++) {
+			file = fileList.get(i);
+			if (file.exists()) {
+				try {
+					CSVReader reader = new CSVReader(new FileReader(file), ',', '"', 1);
+					String[] nextLine;
+					while ((nextLine = reader.readNext()) != null) {
+						if (nextLine != null) {
+							userId = Integer.valueOf(nextLine[0]);
+							movieId = Integer.valueOf(nextLine[1]);
+							mapMovieId2UserId.get(movieId).add(userId);
+						}
+					}
+				} catch (FileNotFoundException e) {
+					logger.error("MovieLensStatReport.loadMovieIdList Error: " + e.getMessage());
+				} catch (IOException e) {
+					logger.error("MovieLensStatReport.loadMovieIdList Error: " + e.getMessage());
+				}
+			}
+		}
+		return mapMovieId2UserId;
+	}
+	
+	private static HashSet<Integer> searchIds(HashMap<Integer, HashSet<Integer>> collections, HashSet<Integer> keys) {
+		HashSet<Integer> result = new HashSet<Integer>();
+		for (Integer eachKey : keys) {
+			result.addAll(collections.get(eachKey));
+		}
+		return result;
+	}
+	
+	public static void calUserIdDistance(Integer userIdStart, Integer userIdEnd, Integer daysPre, Integer daysAfter, int deepLimit) {	// last modified on 2018/07/22
+		
+		ArrayList<Integer> userIdList = loadUserIdList(dataMovieLendsFull + filenameRatings);
+		ArrayList<Integer> movieIdList = loadMovieIdList(dataMovieLendsFull + filenameRatings);
+		
+		HashMap<Integer, HashSet<Integer>> mapUserId2MovieId = loadRatinsMapUserId2MovieId(dataMovieLendsFull + filenameRatings, userIdList, null, null, null);
+		HashMap<Integer, HashSet<Integer>> mapMovieId2UserId = loadRatinsMapMovieId2UserId(dataMovieLendsFull + filenameRatings, movieIdList, null, null, null);
+		
+		Integer userId, movieId;
+		HashSet<Integer> newUserIdSet, newMovieIdSet, currentUserIdSet, currentMovieIdSet;
+		
+		StringBuffer sbSpecialRepot = new StringBuffer();
+
+		// userIdList driven
+		for (int i = 0; i < userIdList.size(); i++) {
+			userId = userIdList.get(i);
+			if (userId < userIdStart || userId > userIdEnd) {
+				continue;
+			}
+			
+			currentUserIdSet = new HashSet<Integer>();
+			currentUserIdSet.add(userId);
+			ArrayList<HashSet<Integer>> lstUserIdSet = new ArrayList<HashSet<Integer>>();
+			ArrayList<HashSet<Integer>> lstMovieIdSet = new ArrayList<HashSet<Integer>>();
+
+			for (int j = 0; j < deepLimit; j++) {
+				newMovieIdSet = searchIds(mapUserId2MovieId, currentUserIdSet);
+				lstUserIdSet.add(currentUserIdSet);
+				lstMovieIdSet.add(newMovieIdSet);
+				logger.info("currentUserIdList size: " + currentUserIdSet.size());
+				logger.info("newMovieIdList size: " + newMovieIdSet.size());
+
+				newUserIdSet = searchIds(mapMovieId2UserId, newMovieIdSet);
+				if (currentUserIdSet.size() == newUserIdSet.size()) {
+					break;
+				} else {
+					currentUserIdSet = newUserIdSet;
+				}
+			}
+
+			// do report
+			TreeMap<Integer, Integer> mapDistResult = new TreeMap<Integer, Integer>();
+			for (int j = 0; j < lstUserIdSet.size() - 1; j++) {
+				currentUserIdSet = (HashSet<Integer>) lstUserIdSet.get(j).clone();
+				newUserIdSet = (HashSet<Integer>) lstUserIdSet.get(j + 1).clone();
+				newUserIdSet.removeAll(currentUserIdSet);
+				for (Integer eachUserId : newUserIdSet) {
+					mapDistResult.put(eachUserId, j + 1);
+				}
+				if (j == lstUserIdSet.size() - 2) {
+					sbSpecialRepot.append("userId:" + userId + "'s max depth is " + (j + 1) + Const.lineBrakeSep);
+				}
+			}
+
+			// do dump
+			StringBuffer sb = new StringBuffer();
+			userId = userIdList.get(i);
+			for (Map.Entry<Integer, Integer> entry : mapDistResult.entrySet()) {
+				sb.append(userId + Const.csvSep + entry.getKey() + Const.csvSep + entry.getValue() + Const.csvSep + Const.lineBrakeSep);
+			}
+			File file = new File(dataMovieLendsFull + filenameRatings);
+			File fileExport = new File(file.getParent() + File.separator + dataExport + "distanceUserId2MovieId" + File.separator + userId + ".csv");
+			FileUtil.writeStringToFile(fileExport, "userId,userId,distance," + Const.lineBrakeSep + sb.toString());
+			
+		}
+		
+		// SpecialRepot
+		File file = new File(dataMovieLendsFull + filenameRatings);
+		File fileExport = new File(file.getParent() + File.separator + dataExport + "distanceUserId2MovieId" + File.separator + "SpecilaReport.txt");
+		FileUtil.writeStringToFile(fileExport, sbSpecialRepot.toString());
+	}
+	
+	public static void calMovieIdDistance(Integer movieIdStart, Integer movieIdEnd, Integer daysPre, Integer daysAfter, int deepLimit) {// last modified on 2018/07/22
+		
 	}
 
 	public static void main(String[] args) {
 
-//		 ArrayList<MovieLensMovieVo> listMovies = MovieLensUtils.parseMovieLensMovie("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest-small\\movies.csv");
-//		 logger.info(listMovies.get(0));
-//		 listMovies = MovieLensUtils.parseMovieLensMovie("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest\\movies.csv");
-//		 logger.info(listMovies.get(0));
+//		ArrayList<MovieLensMovieVo> listMovies = MovieLensUtils.parseMovieLensMovie("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest-small\\movies.csv");
+//		logger.info(listMovies.get(0));
+//		listMovies = MovieLensUtils.parseMovieLensMovie("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest\\movies.csv");
+//		logger.info(listMovies.get(0));
+//		ArrayList<MovieLensLinkVo> listLinks = MovieLensUtils.parseMovieLensLink("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest-small\\links.csv");
+//		logger.info(listLinks.get(0));
+//		listLinks = MovieLensUtils.parseMovieLensLink("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest\\links.csv");
+//		logger.info(listLinks.get(0));
+//		List<MovieLensRatingVo> listRatings = MovieLensUtils.parseMovieLensRating("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest-small\\ratings.csv");
+//		logger.info(listRatings.get(0));
+//		listRatings = MovieLensUtils.parseMovieLensRating("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest\\ratings.csv");
+//		logger.info(listRatings.get(0));
+//		ArrayList<MovieLensTagVo> listTags = MovieLensUtils.parseMovieLensTag("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest-small\\tags.csv");
+//		logger.info(listTags.get(0));
+//		listTags = MovieLensUtils.parseMovieLensTag("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest\\tags.csv");
+//		logger.info(listTags.get(0));
 
-//		 ArrayList<MovieLensLinkVo> listLinks = MovieLensUtils.parseMovieLensLink("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest-small\\links.csv");
-//		 logger.info(listLinks.get(0));
-//		 listLinks = MovieLensUtils.parseMovieLensLink("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest\\links.csv");
-//		 logger.info(listLinks.get(0));
-
-//		 List<MovieLensRatingVo> listRatings = MovieLensUtils.parseMovieLensRating("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest-small\\ratings.csv");
-//		 logger.info(listRatings.get(0));
-//		 listRatings = MovieLensUtils.parseMovieLensRating("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest\\ratings.csv");
-//		 logger.info(listRatings.get(0));
-
-//		 ArrayList<MovieLensTagVo> listTags = MovieLensUtils.parseMovieLensTag("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest-small\\tags.csv");
-//		 logger.info(listTags.get(0));
-//		 listTags = MovieLensUtils.parseMovieLensTag("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest\\tags.csv");
-//		 logger.info(listTags.get(0));
-
-		exportTopRatingUserId(dataMovieLendsFull + filenameRatings);	// last 2018/07/11
-		exportTopRatingMovieId(dataMovieLendsFull + filenameRatings);	// last 2018/07/11
-//		exportRatingsByDate(dataMovieLendsFull + filenameRatings);		// last 2018/07/11
+//		exportTopRatingUserId(dataMovieLendsFull + filenameRatings);	// last modified on 2018/07/11
+//		exportTopRatingMovieId(dataMovieLendsFull + filenameRatings);	// last modified on 2018/07/11
+//		exportRatingsByDate(dataMovieLendsFull + filenameRatings);		// last modified on 2018/07/11
+		
+//		ArrayList<Integer> userIdList = loadUserIdList(dataMovieLendsFull + filenameRatings);	// last modified on 2018/07/21
+//		logger.info(userIdList.size());															// 270896
+//		logger.info(userIdList.get(userIdList.size() - 1));										// 270896
+//		ArrayList<Integer> movieIdList = loadMovieIdList(dataMovieLendsFull + filenameRatings); // last modified on 2018/07/21
+//		logger.info(movieIdList.size());														// 45115
+//		logger.info(movieIdList.get(movieIdList.size() - 1));									// 176275
+		
+		int deepLimit = 10;
+		calUserIdDistance(12, 13, null, null, 10);
 	}
 
 }
