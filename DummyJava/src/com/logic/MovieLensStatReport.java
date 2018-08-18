@@ -40,7 +40,7 @@ public class MovieLensStatReport {
 	private static String filenameTags = "tags.csv";
 	
 	private static String userIdListResult = "userIdList.result";
-	private static String movieIdListResult = "userIdList.result";
+	private static String movieIdListResult = "movieIdList.result";
 
 	private static void exportTopRatingUserId(String filePath) {
 		HashMap<String, Integer> mapUserIdCnt = new HashMap<String, Integer>();
@@ -283,7 +283,7 @@ public class MovieLensStatReport {
 		return movieIdList;
 	}
 	
-	private static HashMap<Integer, HashSet<Integer>> loadRatinsMapUserId2MovieId(String filePath, ArrayList<Integer> userIdList, Date now, Integer daysPre, Integer daysAfter) {
+	private static HashMap<Integer, HashSet<Integer>> loadRatingsMapUserId2MovieId(String filePath, ArrayList<Integer> userIdList, Date now, Integer daysPre, Integer daysAfter) {
 		HashMap<Integer, HashSet<Integer>> mapUserId2MovieId = new HashMap<Integer, HashSet<Integer>>();
 
 		// initiate mapUserId2MovieId
@@ -330,7 +330,7 @@ public class MovieLensStatReport {
 		return mapUserId2MovieId;
 	}
 	
-	private static HashMap<Integer, HashSet<Integer>> loadRatinsMapMovieId2UserId(String filePath, ArrayList<Integer> movieIdList, Date now, Integer daysPre, Integer daysAfter) {
+	private static HashMap<Integer, HashSet<Integer>> loadRatingsMapMovieId2UserId(String filePath, ArrayList<Integer> movieIdList, Date now, Integer daysPre, Integer daysAfter) {
 		HashMap<Integer, HashSet<Integer>> mapMovieId2UserId = new HashMap<Integer, HashSet<Integer>>();
 
 		// initiate mapMovieId2UserId
@@ -385,13 +385,89 @@ public class MovieLensStatReport {
 		return result;
 	}
 	
-	public static void calUserIdDistance(Integer userIdStart, Integer userIdEnd, Integer daysPre, Integer daysAfter, int deepLimit) {	// last modified on 2018/07/22
+	public static void calUserIdDistanceSmall(Integer userIdStart, Integer userIdEnd, Integer daysPre, Integer daysAfter, int deepLimit) {	// last modified on 2018/07/22
+		
+		ArrayList<Integer> userIdList = loadUserIdList(dataMovieLendsSmall + filenameRatings);
+		ArrayList<Integer> movieIdList = loadMovieIdList(dataMovieLendsSmall + filenameRatings);
+		
+		HashMap<Integer, HashSet<Integer>> mapUserId2MovieId = loadRatingsMapUserId2MovieId(dataMovieLendsSmall + filenameRatings, userIdList, null, null, null);
+		HashMap<Integer, HashSet<Integer>> mapMovieId2UserId = loadRatingsMapMovieId2UserId(dataMovieLendsSmall + filenameRatings, movieIdList, null, null, null);
+		
+		Integer userId, movieId;
+		HashSet<Integer> newUserIdSet, newMovieIdSet, currentUserIdSet, currentMovieIdSet;
+		
+		StringBuffer sbSpecialRepot = new StringBuffer();
+
+		// userIdList driven
+		for (int i = 0; i < userIdList.size(); i++) {
+			userId = userIdList.get(i);
+			if (userId < userIdStart || userId > userIdEnd) {
+				continue;
+			}
+			
+			currentUserIdSet = new HashSet<Integer>();
+			currentUserIdSet.add(userId);
+			ArrayList<HashSet<Integer>> lstUserIdSet = new ArrayList<HashSet<Integer>>();
+			ArrayList<HashSet<Integer>> lstMovieIdSet = new ArrayList<HashSet<Integer>>();
+
+			for (int j = 0; j < deepLimit; j++) {
+				newMovieIdSet = searchIds(mapUserId2MovieId, currentUserIdSet);
+				lstUserIdSet.add(currentUserIdSet);
+				lstMovieIdSet.add(newMovieIdSet);
+				logger.info("currentUserIdList size: " + currentUserIdSet.size());
+				logger.info("newMovieIdList size: " + newMovieIdSet.size());
+
+				newUserIdSet = searchIds(mapMovieId2UserId, newMovieIdSet);
+				if (currentUserIdSet.size() == newUserIdSet.size()) {
+					break;
+				} else {
+					currentUserIdSet = newUserIdSet;
+				}
+			}
+
+			// do report
+			TreeMap<Integer, Integer> mapDistResult = new TreeMap<Integer, Integer>();
+			for (int j = 0; j < lstUserIdSet.size() - 1; j++) {
+				currentUserIdSet = (HashSet<Integer>) lstUserIdSet.get(j).clone();
+				newUserIdSet = (HashSet<Integer>) lstUserIdSet.get(j + 1).clone();
+				newUserIdSet.removeAll(currentUserIdSet);
+				for (Integer eachUserId : newUserIdSet) {
+					mapDistResult.put(eachUserId, j + 1);
+				}
+				if (j == lstUserIdSet.size() - 2) {
+					sbSpecialRepot.append("userId:" + userId + "'s max depth is " + (j + 1) + Const.lineBrakeSep);
+				}
+			}
+
+			// do dump
+			StringBuffer sb = new StringBuffer();
+			userId = userIdList.get(i);
+			for (Map.Entry<Integer, Integer> entry : mapDistResult.entrySet()) {
+				sb.append(userId + Const.csvSep + entry.getKey() + Const.csvSep + entry.getValue() + Const.csvSep + Const.lineBrakeSep);
+			}
+			File file = new File(dataMovieLendsSmall + filenameRatings);
+			File fileExport = new File(file.getParent() + File.separator + dataExport + "distanceUserId2MovieId" + File.separator + userId + ".csv");
+			FileUtil.writeStringToFile(fileExport, "userId,userId,distance," + Const.lineBrakeSep + sb.toString());
+			
+		}
+		
+		// SpecialRepot
+		File file = new File(dataMovieLendsSmall + filenameRatings);
+		File fileExport = new File(file.getParent() + File.separator + dataExport + "distanceUserId2MovieId" + File.separator + "SpecilaReport.txt");
+		FileUtil.writeStringToFile(fileExport, sbSpecialRepot.toString());
+	}
+	
+	public static void calMovieIdDistanceSmall(Integer movieIdStart, Integer movieIdEnd, Integer daysPre, Integer daysAfter, int deepLimit) {// last modified on 2018/07/22
+		
+	}
+	
+	public static void calUserIdDistanceFull(Integer userIdStart, Integer userIdEnd, Integer daysPre, Integer daysAfter, int deepLimit) {	// last modified on 2018/07/22
 		
 		ArrayList<Integer> userIdList = loadUserIdList(dataMovieLendsFull + filenameRatings);
 		ArrayList<Integer> movieIdList = loadMovieIdList(dataMovieLendsFull + filenameRatings);
 		
-		HashMap<Integer, HashSet<Integer>> mapUserId2MovieId = loadRatinsMapUserId2MovieId(dataMovieLendsFull + filenameRatings, userIdList, null, null, null);
-		HashMap<Integer, HashSet<Integer>> mapMovieId2UserId = loadRatinsMapMovieId2UserId(dataMovieLendsFull + filenameRatings, movieIdList, null, null, null);
+		HashMap<Integer, HashSet<Integer>> mapUserId2MovieId = loadRatingsMapUserId2MovieId(dataMovieLendsFull + filenameRatings, userIdList, null, null, null);
+		HashMap<Integer, HashSet<Integer>> mapMovieId2UserId = loadRatingsMapMovieId2UserId(dataMovieLendsFull + filenameRatings, movieIdList, null, null, null);
 		
 		Integer userId, movieId;
 		HashSet<Integer> newUserIdSet, newMovieIdSet, currentUserIdSet, currentMovieIdSet;
@@ -457,7 +533,7 @@ public class MovieLensStatReport {
 		FileUtil.writeStringToFile(fileExport, sbSpecialRepot.toString());
 	}
 	
-	public static void calMovieIdDistance(Integer movieIdStart, Integer movieIdEnd, Integer daysPre, Integer daysAfter, int deepLimit) {// last modified on 2018/07/22
+	public static void calMovieIdDistanceFull(Integer movieIdStart, Integer movieIdEnd, Integer daysPre, Integer daysAfter, int deepLimit) {// last modified on 2018/07/22
 		
 	}
 
@@ -480,10 +556,33 @@ public class MovieLensStatReport {
 //		listTags = MovieLensUtils.parseMovieLensTag("E:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest\\tags.csv");
 //		logger.info(listTags.get(0));
 
+		int deepLimit = 10;
+		
+		// Small
+//		exportTopRatingUserId(dataMovieLendsSmall + filenameRatings);	// last modified on 2018/07/11
+//		exportTopRatingMovieId(dataMovieLendsSmall + filenameRatings);	// last modified on 2018/07/11
+//		exportRatingsByDate(dataMovieLendsSmall + filenameRatings);		// last modified on 2018/07/11
+//		
+//		ArrayList<Integer> userIdList = loadUserIdList(dataMovieLendsSmall + filenameRatings);	// last modified on 2018/07/21
+//		logger.info(userIdList.size());															// 671
+//		logger.info(userIdList.get(userIdList.size() - 1));										// 671
+//		ArrayList<Integer> movieIdList = loadMovieIdList(dataMovieLendsSmall + filenameRatings);// last modified on 2018/07/21
+//		logger.info(movieIdList.size());														// 9066
+//		logger.info(movieIdList.get(movieIdList.size() - 1));									// 9066
+
+		// Non-matrix: 先使用暴力法玩玩
+//		calUserIdDistanceSmall(1, 671, null, null, deepLimit);
+		
+		// Matrix: 先使用暴力法玩玩
+		
+		
+		
+		
+		// Full
 //		exportTopRatingUserId(dataMovieLendsFull + filenameRatings);	// last modified on 2018/07/11
 //		exportTopRatingMovieId(dataMovieLendsFull + filenameRatings);	// last modified on 2018/07/11
 //		exportRatingsByDate(dataMovieLendsFull + filenameRatings);		// last modified on 2018/07/11
-		
+//		
 //		ArrayList<Integer> userIdList = loadUserIdList(dataMovieLendsFull + filenameRatings);	// last modified on 2018/07/21
 //		logger.info(userIdList.size());															// 270896
 //		logger.info(userIdList.get(userIdList.size() - 1));										// 270896
@@ -491,8 +590,6 @@ public class MovieLensStatReport {
 //		logger.info(movieIdList.size());														// 45115
 //		logger.info(movieIdList.get(movieIdList.size() - 1));									// 176275
 		
-		int deepLimit = 10;
-		calUserIdDistance(12, 13, null, null, 10);
 	}
 
 }
