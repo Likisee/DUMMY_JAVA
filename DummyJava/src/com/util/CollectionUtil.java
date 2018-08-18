@@ -38,11 +38,11 @@ public class CollectionUtil {
 		dataArrayList.toArray(dataArray);
 		return dataArray;
 	}
-	
+
 	public static Integer[][] getArrayList2Array(ArrayList<ArrayList<Integer>> dataArrayList) {
 		Integer[][] dataArray = new Integer[dataArrayList.size()][dataArrayList.get(0).size()];
-		for(int i = 0; i < dataArrayList.size(); i++) {
-			dataArrayList.get(i).toArray(dataArray[i]);	
+		for (int i = 0; i < dataArrayList.size(); i++) {
+			dataArrayList.get(i).toArray(dataArray[i]);
 		}
 		return dataArray;
 	}
