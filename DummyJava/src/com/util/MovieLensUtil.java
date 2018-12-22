@@ -23,7 +23,7 @@ public class MovieLensUtil {
 
 	private static Log logger = LogFactory.getLog(MovieLensUtil.class);
 
-	private static String dataRoot = "E:\\DataSet\\#Running\\";
+	private static String dataRoot = "D:\\DataSet\\#Running\\";
 	private static String dataMovieLendsSmall = dataRoot + "MovieLens Latest Datasets\\ml-latest-small\\";
 	private static String dataMovieLendsFull = dataRoot + "MovieLens Latest Datasets\\ml-latest\\";
 
@@ -62,7 +62,7 @@ public class MovieLensUtil {
 			}
 
 		} catch (FileNotFoundException e) {
-			logger.error("MovieLensUtils.parseMovieLensMovie Error: " + e.getMessage());
+			logger.error("MovieLensUtils.parseMovieLensMovie Error: " + e.getMessage(), e);
 		}
 		return result;
 	}
@@ -94,7 +94,7 @@ public class MovieLensUtil {
 			}
 
 		} catch (FileNotFoundException e) {
-			logger.error("MovieLensUtils.parseMovieLensLink Error: " + e.getMessage());
+			logger.error("MovieLensUtils.parseMovieLensLink Error: " + e.getMessage(), e);
 		}
 		return result;
 	}
@@ -126,7 +126,7 @@ public class MovieLensUtil {
 			}
 
 		} catch (FileNotFoundException e) {
-			logger.error("MovieLensUtils.parseMovieLensRating Error: " + e.getMessage());
+			logger.error("MovieLensUtils.parseMovieLensRating Error: " + e.getMessage(), e);
 		}
 		return result;
 	}
@@ -176,7 +176,7 @@ public class MovieLensUtil {
 			}
 
 		} catch (FileNotFoundException e) {
-			logger.error("MovieLensUtils.parseMovieLensTag Error: " + e.getMessage());
+			logger.error("MovieLensUtils.parseMovieLensTag Error: " + e.getMessage(), e);
 		}
 		return result;
 	}
@@ -235,7 +235,7 @@ public class MovieLensUtil {
 //			}
 
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error(e.getMessage(), e);
 		}
 	}
 

@@ -31,7 +31,7 @@ public class TimeUtil {
 		try {
 			return sdf.parse(date);
 		} catch (ParseException e) {
-			logger.error("parseByDefaultSimpleDateTime error: " + e.getMessage());
+			logger.error("parseByDefaultSimpleDateTime error: " + e.getMessage(), e);
 			return null;
 		}
 	}
@@ -42,19 +42,19 @@ public class TimeUtil {
 		try {
 			return addDays(sdf.parse(date), days);
 		} catch (ParseException e) {
-			logger.error("addDays error: " + e.getMessage());
+			logger.error("addDays error: " + e.getMessage(), e);
 			return null;
 		}
 	}
 
 	public static Date addDays(Date date, int days) {
 		long timestamp = date.getTime();
-		timestamp = timestamp + new Long(1000) * 60 * 60 * 24 * days;
+		timestamp = timestamp + Long.valueOf(1000) * 60 * 60 * 24 * days;
 		return new Date(timestamp);
 	}
 	
 	public static Date getIntDateToDate(int intDate) {
-		Date date = new Date(intDate * new Long(1000) * 60 * 60 * 24);
+		Date date = new Date(intDate * Long.valueOf(1000) * 60 * 60 * 24);
 		return date;
 	}
 	

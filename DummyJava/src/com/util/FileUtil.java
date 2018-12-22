@@ -30,8 +30,7 @@ public class FileUtil {
 			targetFileStr = org.apache.commons.io.IOUtils.toString(fisTargetFile, "UTF-8");
 			fisTargetFile.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
 		return targetFileStr;
 	}
@@ -51,8 +50,7 @@ public class FileUtil {
 		try {
 			org.apache.commons.io.FileUtils.writeStringToFile(file, content, "UTF-8", false);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 			return false;
 		}
 		return true;
@@ -76,11 +74,9 @@ public class FileUtil {
 			ObjectInputStream objectinputstream = new ObjectInputStream(fin);
 			content = objectinputstream.readObject();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
 		return content;
 	}
@@ -104,8 +100,7 @@ public class FileUtil {
 			oos.close();
 			fout.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 			return false;
 		}
 		return true;
@@ -136,34 +131,29 @@ public class FileUtil {
 				System.out.println(br.readLine());
 			}
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		} finally {
 			if (br != null) {
 				try {
 					br.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 				}
 			}
 			if (isr != null) {
 				try {
 					isr.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 				}
 			}
 			if (fs != null) {
 				try {
 					fs.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 				}
 			}
 		}
