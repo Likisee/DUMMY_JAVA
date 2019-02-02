@@ -24,6 +24,7 @@ import com.constant.Const;
 import com.util.CollectionUtil;
 import com.util.FileUtil;
 import com.util.HBaseUtil;
+import com.util.MathUtil;
 import com.util.StringUtil;
 import com.util.TimeUtil;
 
@@ -401,12 +402,6 @@ public class MovieLensStatReport {
 		return mapUserId2MovieId;
 	}
 	
-	@Deprecated
-	private static HashMap<String, HashSet<String>> loadRatingsMapMovieId2UserId(String filePath, ArrayList<String> movieIdList, Integer daysPre, Integer daysAfter) {
-		HashMap<String, HashSet<String>> mapMovieId2UserId = new HashMap<String, HashSet<String>>();
-		return mapMovieId2UserId;
-	}
-	
 	private static HashMap<String, HashSet<String>> getRatingsMapReverse(HashMap<String, HashSet<String>> reatingMap) {
 		HashMap<String, HashSet<String>> result = new HashMap<String, HashSet<String>>();
 		for (Map.Entry<String, HashSet<String>> entry : reatingMap.entrySet()) {
@@ -421,68 +416,6 @@ public class MovieLensStatReport {
 		}
 		return result;
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	private static ArrayList<ArrayList<Integer>> getUserIdBasedMatrix(String filePathRatings, ArrayList<String> userIdList, Integer daysPre, Integer daysAfter) {
 		ArrayList<ArrayList<Integer>> result = new ArrayList<ArrayList<Integer>>();
@@ -546,60 +479,86 @@ public class MovieLensStatReport {
 			rsb.append(JSONArray.fromObject(userIdRowList) + Const.lineBrakeSep);
 		}
 		
-		
-		
-
-		// TODO ENHANCEMENT
-//		String userIdRow, userIdCol;
-//		int count, countMax = Integer.MIN_VALUE;
-//		HashSet<String> movieIdSet;
-//		for (int i = 0; i < userIdList.size(); i++) {
-//			userIdRow = userIdList.get(i);
-//			ArrayList<Integer> userIdRowList = new ArrayList<Integer>();
-//			for (int j = 0; j < userIdList.size(); j++) {
-//				userIdCol = userIdList.get(j);
-//
-//				// logic skill
-//				count = 0;
-//				HashSet<String> countedMovieIdSet = new HashSet<String>();
-//				if (i != j) {
-//					if (mapUserId2MovieId.containsKey(userIdRow)) {
-//						movieIdSet = mapUserId2MovieId.get(userIdRow);
-//						for (String movieId : movieIdSet) {
-//							if (countedMovieIdSet.contains(HBaseUtil.getStringSplit(movieId).get(0))) {
-//								continue;
-//							}
-//							if (mapMovieId2UserId.containsKey(movieId) && mapMovieId2UserId.get(movieId).contains(userIdCol)) {
-//								count++;
-//								countedMovieIdSet.add(HBaseUtil.getStringSplit(movieId).get(0));
-//							}
-//						}
-//					}
-//					if (countMax < count) {
-//						countMax = count;
-//					}
-//				}
-//				userIdRowList.add(count);
-//			}
-//			result.add(userIdRowList);
-//			rsb.append(JSONArray.fromObject(userIdRowList) + Const.lineBrakeSep);
-//		}
-		
-//		for (Map.Entry<String, HashSet<String>> entry : mapMovieId2UserId.entrySet()) {
-//			if (entry.getValue().size() > 2) {
-//				logger.info("key: " + entry.getKey());
-//				logger.info("value: " + JSONArray.fromObject(entry.getValue()));
-//			}
-//		}
-
+		// get dump
 		logger.info("countMax: " + countMax);
-		String filename = "userIdBasedMatrix_" + daysPre + "_" + daysAfter + "_" + countMax + ".txt";
+//		String filename = "userIdBasedMatrix_" + daysPre + "_" + daysAfter + "_" + countMax + ".txt"; // <BAD_FILE_NAMING>
+		String filename = "userIdBasedMatrix_" + daysPre + "_" + daysAfter + ".txt";
 		File file = new File(filePathRatings);
-		File fileMatrix = new File(file.getParent() + File.separator + dataExport + "Matrix" + File.separator + filename);
+		File fileMatrix = new File(file.getParent() + File.separator + dataExport + "UserIdBasedMatrix" + File.separator + filename);
 		FileUtil.writeStringToFile(fileMatrix, rsb.toString());
 		return result;
 	}
 	
+	private static void digestUserIdBasedMatrix(String folderPathUserIdBasedMatrix) {
+		StringBuffer rsbMean = new StringBuffer("");
+		StringBuffer rsbMin = new StringBuffer("");
+		StringBuffer rsbMedian = new StringBuffer("");
+		StringBuffer rsbMax = new StringBuffer("");
+		
+		// <BAD_FILE_NAMING>
+//		File folder = new File(folderPathUserIdBasedMatrix);
+//		String newFilename;
+//		File newFile;
+//		File[] fileArr = folder.listFiles();
+//		for (int i = 0; i < fileArr.length; i++) {
+//			if(fileArr[i].isFile()) {
+//				newFilename = fileArr[i].getName().replace(".txt", "");
+//				newFilename = newFilename.substring(0, newFilename.lastIndexOf("_")) + ".txt";
+//				newFile = new File(folderPathUserIdBasedMatrix + File.separator + newFilename);
+//				fileArr[i].renameTo(newFile);
+//			}
+//		}
+		String filename;
+		File file;
+		for (int daysPre = 0; daysPre <= 100; daysPre++) {
+			for (int daysAfter = 0; daysAfter <= 100; daysAfter++) {
+				filename = "userIdBasedMatrix_" + daysPre + "_" + daysAfter + ".txt";
+				logger.info(filename);
+				file = new File(folderPathUserIdBasedMatrix + File.separator + filename);
+				if(file.exists()) {
+					ArrayList<Double> dataList = new ArrayList<Double>();
+					String[] contentArr = FileUtil.readFileAsString(file).split(Const.lineBrakeDelim);
+					for(int i = 0; i < contentArr.length; i++) {
+						JSONArray jData = JSONArray.fromObject(contentArr[i]);
+						for(int j = 0; j < jData.size(); j++) {
+							dataList.add(jData.getDouble(j));
+						}
+					}
+					rsbMean.append(MathUtil.getMean(dataList) + "\t");
+					rsbMin.append(MathUtil.getMin(dataList)+ "\t");
+					rsbMedian.append(MathUtil.getMedian(dataList)+ "\t");
+					rsbMax.append(MathUtil.getMax(dataList)+ "\t");
+				}
+			}
+			rsbMean.append(Const.lineBrakeSep);
+			rsbMin.append(Const.lineBrakeSep);
+			rsbMedian.append(Const.lineBrakeSep);
+			rsbMax.append(Const.lineBrakeSep);
+		}
+
+		// get dump
+		filename = "DigestedUserIdBasedMatrix_" + "Mean" + ".txt";
+		file = new File(folderPathUserIdBasedMatrix);
+		File fileResult = new File(file.getParent() + File.separator + "UserIdBasedMatrix" + File.separator + filename);
+		FileUtil.writeStringToFile(fileResult, rsbMean.toString());
+		
+		filename = "DigestedUserIdBasedMatrix_" + "Min" + ".txt";
+		file = new File(folderPathUserIdBasedMatrix);
+		fileResult = new File(file.getParent() + File.separator + "UserIdBasedMatrix" + File.separator + filename);
+		FileUtil.writeStringToFile(fileResult, rsbMin.toString());
+		
+		filename = "DigestedUserIdBasedMatrix_" + "Median" + ".txt";
+		file = new File(folderPathUserIdBasedMatrix);
+		fileResult = new File(file.getParent() + File.separator + "UserIdBasedMatrix" + File.separator + filename);
+		FileUtil.writeStringToFile(fileResult, rsbMedian.toString());
+		
+		filename = "DigestedUserIdBasedMatrix_" + "Max" + ".txt";
+		file = new File(folderPathUserIdBasedMatrix);
+		fileResult = new File(file.getParent() + File.separator + "UserIdBasedMatrix" + File.separator + filename);
+		FileUtil.writeStringToFile(fileResult, rsbMax.toString());
+	}
+	
+	// 爆力法
 	private static HashSet<String> searchIds(HashMap<String, HashSet<String>> collections, HashSet<String> keys) {
 		HashSet<String> result = new HashSet<String>();
 		for (String eachKey : keys) {
@@ -610,6 +569,7 @@ public class MovieLensStatReport {
 		return result;
 	}
 
+	// 爆力法
 	public static void calUserIdDistance(String filePathRatings,
 			ArrayList<String> userIdList, Integer daysPre, Integer daysAfter, int deepLimit) {
 
@@ -681,12 +641,6 @@ public class MovieLensStatReport {
 		FileUtil.writeStringToFile(fileExport, sbSpecialReport.toString());
 	}
 	
-	@Deprecated
-	public static void calMovieIdDistance(String filePathRatings,
-			ArrayList<String> movieIdList, Integer daysPre, Integer daysAfter, int deepLimit) {
-		
-	}
-	
 	public static void main(String[] args) {
 
 //		ArrayList<MovieLensMovieVo> listMovies = MovieLensUtils.parseMovieLensMovie("D:\\DataSet\\#Running\\MovieLens Latest Datasets\\ml-latest-small\\movies.csv");
@@ -720,22 +674,24 @@ public class MovieLensStatReport {
 //		logger.info(movieIdList.size());														// 9066
 //		logger.info(movieIdList.get(movieIdList.size() - 1));									// 163949
 
-		// Matrix: 先使用暴力法玩玩 (抓光譜/抓斜率/Mean/Median/Min/Max/StdDev)
+		// Non-matrix: 先使用暴力法玩玩
+//		calUserIdDistance(dataMovieLendsSmall + filenameRatings, 1, 671, null, null, deepLimit);	
+		
 		ArrayList<String> userIdList = loadUserIdList(dataMovieLendsSmall + filenameRatings);
 		ArrayList<String> movieIdList = loadMovieIdList(dataMovieLendsSmall + filenameRatings);
-		ArrayList<ArrayList<Integer>> result = getUserIdBasedMatrix(dataMovieLendsSmall + filenameRatings, userIdList, null, null);
+		
+		// 2018/12/18 00:02 ~ 2018/12/22 04:39
 //		ArrayList<ArrayList<Integer>> result = getUserIdBasedMatrix(dataMovieLendsSmall + filenameRatings, userIdList, 50, 50);
 //		ArrayList<ArrayList<Integer>> result = getUserIdBasedMatrix(dataMovieLendsSmall + filenameRatings, userIdList, 10, 10);
 //		ArrayList<ArrayList<Integer>> result = getUserIdBasedMatrix(dataMovieLendsSmall + filenameRatings, userIdList, 0, 0);
-		for(int i = 0; i <= 100 ; i++) {
-			for(int j = 0; j <= 100 ; j++) {
-				result = getUserIdBasedMatrix(dataMovieLendsSmall + filenameRatings, userIdList, i, j);
-			}	
-		}
+//		for(int i = 0; i <= 100 ; i++) {
+//			for(int j = 0; j <= 100 ; j++) {
+//				result = getUserIdBasedMatrix(dataMovieLendsSmall + filenameRatings, userIdList, i, j);
+//			}	
+//		}
 		
-		// Non-matrix: 先使用暴力法玩玩
-//		calUserIdDistance(dataMovieLendsSmall + filenameRatings, 1, 671, null, null, deepLimit);		
-		
+		// 2019/01/27
+		digestUserIdBasedMatrix(dataMovieLendsSmall + dataExport + "UserIdBasedMatrix");
 
 //		ArrayList<ArrayList<Integer>> big = new ArrayList<ArrayList<Integer>>();
 //		ArrayList<Integer> data = new ArrayList<Integer>();
