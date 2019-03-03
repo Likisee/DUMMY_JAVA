@@ -15,10 +15,23 @@ public class MathUtil {
 		Double result = null;
 		if (dataList != null) {
 			BigDecimal sum = new BigDecimal(0);
+			int count = 0;
 			for (Double value : dataList) {
-				sum.add(new BigDecimal(value));
+				if (value != null) {
+					sum = sum.add(new BigDecimal(value.doubleValue()));
+					count++;
+				}
 			}
-			result = sum.divide(new BigDecimal(dataList.size())).doubleValue();
+			result = sum.divide(new BigDecimal(count), 10, BigDecimal.ROUND_HALF_UP).doubleValue();
+//			double sum = 0;
+//			int count = 0;
+//			for (Double value : dataList) {
+//				if (value != null) {
+//					sum += value;
+//					count++;
+//				}
+//			}
+//			result = sum / count;
 		}
 		return result;
 	}
