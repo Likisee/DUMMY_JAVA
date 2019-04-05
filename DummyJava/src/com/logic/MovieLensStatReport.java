@@ -33,8 +33,8 @@ public class MovieLensStatReport {
 	private static Log logger = LogFactory.getLog(MovieLensStatReport.class);
 
 	private static String dataRoot = "D:\\DataSet\\#Running\\";
-	private static String dataMovieLendsSmall = dataRoot + "MovieLens Latest Datasets\\ml-latest-small\\";
-	private static String dataMovieLendsFull = dataRoot + "MovieLens Latest Datasets\\ml-latest\\";
+	private static String dataMovieLensSmall = dataRoot + "MovieLens Latest Datasets\\ml-latest-small\\";
+	private static String dataMovieLensFull = dataRoot + "MovieLens Latest Datasets\\ml-latest\\";
 
 	private static String dataExport = "Export\\";
 
@@ -494,6 +494,7 @@ public class MovieLensStatReport {
 		StringBuffer rsbMin = new StringBuffer("");
 		StringBuffer rsbMedian = new StringBuffer("");
 		StringBuffer rsbMax = new StringBuffer("");
+		StringBuffer rsbStdDev = new StringBuffer("");
 		
 		// <BAD_FILE_NAMING>
 //		File folder = new File(folderPathUserIdBasedMatrix);
@@ -516,24 +517,32 @@ public class MovieLensStatReport {
 				logger.info(filename);
 				file = new File(folderPathUserIdBasedMatrix + File.separator + filename);
 				if(file.exists()) {
+					double value;
 					ArrayList<Double> dataList = new ArrayList<Double>();
+					ArrayList<Double> noZeroDataList = new ArrayList<Double>();
 					String[] contentArr = FileUtil.readFileAsString(file).split(Const.lineBrakeDelim);
-					for(int i = 0; i < contentArr.length; i++) {
+					for (int i = 0; i < contentArr.length; i++) {
 						JSONArray jData = JSONArray.fromObject(contentArr[i]);
-						for(int j = 0; j < jData.size(); j++) {
-							dataList.add(jData.getDouble(j));
+						for (int j = 0; j < jData.size(); j++) {
+							value = jData.getDouble(j);
+							dataList.add(value);
+							if (value != 0) {
+								noZeroDataList.add(value);
+							}
 						}
 					}
 					rsbMean.append(MathUtil.getMean(dataList) + "\t");
 					rsbMin.append(MathUtil.getMin(dataList)+ "\t");
 					rsbMedian.append(MathUtil.getMedian(dataList)+ "\t");
 					rsbMax.append(MathUtil.getMax(dataList)+ "\t");
+					rsbStdDev.append(MathUtil.getStdDev(noZeroDataList) + "\t");
 				}
 			}
 			rsbMean.append(Const.lineBrakeSep);
 			rsbMin.append(Const.lineBrakeSep);
 			rsbMedian.append(Const.lineBrakeSep);
 			rsbMax.append(Const.lineBrakeSep);
+			rsbStdDev.append(Const.lineBrakeSep);
 		}
 
 		// get dump
@@ -556,6 +565,11 @@ public class MovieLensStatReport {
 		file = new File(folderPathUserIdBasedMatrix);
 		fileResult = new File(file.getParent() + File.separator + "UserIdBasedMatrix" + File.separator + filename);
 		FileUtil.writeStringToFile(fileResult, rsbMax.toString());
+		
+		filename = "DigestedUserIdBasedMatrix_" + "StdDev" + ".txt";
+		file = new File(folderPathUserIdBasedMatrix);
+		fileResult = new File(file.getParent() + File.separator + "UserIdBasedMatrix" + File.separator + filename);
+		FileUtil.writeStringToFile(fileResult, rsbStdDev.toString());
 	}
 	
 	// 爆力法
@@ -636,7 +650,7 @@ public class MovieLensStatReport {
 		}
 		
 		// SpecialRepot
-		File file = new File(dataMovieLendsSmall + filenameRatings);
+		File file = new File(dataMovieLensSmall + filenameRatings);
 		File fileExport = new File(file.getParent() + File.separator + dataExport + "distanceUserId2MovieId" + File.separator + "SpecilaReport.txt");
 		FileUtil.writeStringToFile(fileExport, sbSpecialReport.toString());
 	}
@@ -663,35 +677,35 @@ public class MovieLensStatReport {
 		int deepLimit = 10;
 		
 		// Small
-//		exportTopRatingUserId(dataMovieLendsSmall + filenameRatings);
-//		exportTopRatingMovieId(dataMovieLendsSmall + filenameRatings);
-//		exportRatingsByDate(dataMovieLendsSmall + filenameRatings);
+//		exportTopRatingUserId(dataMovieLensSmall + filenameRatings);
+//		exportTopRatingMovieId(dataMovieLensSmall + filenameRatings);
+//		exportRatingsByDate(dataMovieLensSmall + filenameRatings);
 //		
-//		ArrayList<Integer> userIdList = loadUserIdList(dataMovieLendsSmall + filenameRatings);
+//		ArrayList<Integer> userIdList = loadUserIdList(dataMovieLensSmall + filenameRatings);
 //		logger.info(userIdList.size());															// 671
 //		logger.info(userIdList.get(userIdList.size() - 1));										// 671
-//		ArrayList<Integer> movieIdList = loadMovieIdList(dataMovieLendsSmall + filenameRatings);
+//		ArrayList<Integer> movieIdList = loadMovieIdList(dataMovieLensSmall + filenameRatings);
 //		logger.info(movieIdList.size());														// 9066
 //		logger.info(movieIdList.get(movieIdList.size() - 1));									// 163949
 
 		// Non-matrix: 先使用暴力法玩玩
-//		calUserIdDistance(dataMovieLendsSmall + filenameRatings, 1, 671, null, null, deepLimit);	
+//		calUserIdDistance(dataMovieLensSmall + filenameRatings, 1, 671, null, null, deepLimit);	
 		
-		ArrayList<String> userIdList = loadUserIdList(dataMovieLendsSmall + filenameRatings);
-		ArrayList<String> movieIdList = loadMovieIdList(dataMovieLendsSmall + filenameRatings);
+		ArrayList<String> userIdList = loadUserIdList(dataMovieLensSmall + filenameRatings);
+		ArrayList<String> movieIdList = loadMovieIdList(dataMovieLensSmall + filenameRatings);
 		
 		// 2018/12/18 00:02 ~ 2018/12/22 04:39
-//		ArrayList<ArrayList<Integer>> result = getUserIdBasedMatrix(dataMovieLendsSmall + filenameRatings, userIdList, 50, 50);
-//		ArrayList<ArrayList<Integer>> result = getUserIdBasedMatrix(dataMovieLendsSmall + filenameRatings, userIdList, 10, 10);
-//		ArrayList<ArrayList<Integer>> result = getUserIdBasedMatrix(dataMovieLendsSmall + filenameRatings, userIdList, 0, 0);
+//		ArrayList<ArrayList<Integer>> result = getUserIdBasedMatrix(dataMovieLensSmall + filenameRatings, userIdList, 50, 50);
+//		ArrayList<ArrayList<Integer>> result = getUserIdBasedMatrix(dataMovieLensSmall + filenameRatings, userIdList, 10, 10);
+//		ArrayList<ArrayList<Integer>> result = getUserIdBasedMatrix(dataMovieLensSmall + filenameRatings, userIdList, 0, 0);
 //		for(int i = 0; i <= 100 ; i++) {
 //			for(int j = 0; j <= 100 ; j++) {
-//				result = getUserIdBasedMatrix(dataMovieLendsSmall + filenameRatings, userIdList, i, j);
+//				result = getUserIdBasedMatrix(dataMovieLensSmall + filenameRatings, userIdList, i, j);
 //			}	
 //		}
 		
 		// 2019/01/27
-		digestUserIdBasedMatrix(dataMovieLendsSmall + dataExport + "UserIdBasedMatrix");
+		digestUserIdBasedMatrix(dataMovieLensSmall + dataExport + "UserIdBasedMatrix");
 
 //		ArrayList<ArrayList<Integer>> big = new ArrayList<ArrayList<Integer>>();
 //		ArrayList<Integer> data = new ArrayList<Integer>();
@@ -704,19 +718,19 @@ public class MovieLensStatReport {
 		
 		
 		// Full
-//		exportTopRatingUserId(dataMovieLendsFull + filenameRatings);
-//		exportTopRatingMovieId(dataMovieLendsFull + filenameRatings);
-//		exportRatingsByDate(dataMovieLendsFull + filenameRatings);
+//		exportTopRatingUserId(dataMovieLensFull + filenameRatings);
+//		exportTopRatingMovieId(dataMovieLensFull + filenameRatings);
+//		exportRatingsByDate(dataMovieLensFull + filenameRatings);
 //		
-//		ArrayList<Integer> userIdList = loadUserIdList(dataMovieLendsFull + filenameRatings);
+//		ArrayList<Integer> userIdList = loadUserIdList(dataMovieLensFull + filenameRatings);
 //		logger.info(userIdList.size());															// 270896
 //		logger.info(userIdList.get(userIdList.size() - 1));										// 270896
-//		ArrayList<Integer> movieIdList = loadMovieIdList(dataMovieLendsFull + filenameRatings);
+//		ArrayList<Integer> movieIdList = loadMovieIdList(dataMovieLensFull + filenameRatings);
 //		logger.info(movieIdList.size());														// 45115
 //		logger.info(movieIdList.get(movieIdList.size() - 1));									// 176275
 
 		// Non-matrix: 先使用暴力法玩玩		
-//		calUserIdDistance(dataMovieLendsFull + filenameRatings, 1, 100, null, null, deepLimit);
+//		calUserIdDistance(dataMovieLensFull + filenameRatings, 1, 100, null, null, deepLimit);
 		
 	}
 
