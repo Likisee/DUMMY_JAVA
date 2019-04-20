@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -16,6 +18,7 @@ import au.com.bytecode.opencsv.bean.CsvToBean;
 
 import com.util.DataSourceUtil;
 import com.util.TimeUtil;
+import com.vo.KaggleTheMoviesDataSetMoviesMetadataVo;
 import com.vo.MovieLensLinkVo;
 import com.vo.MovieLensMovieVo;
 import com.vo.MovieLensRatingVo;
@@ -93,6 +96,20 @@ public class MovieLensUtil {
 
 		} catch (FileNotFoundException e) {
 			logger.error("MovieLensUtils.parseMovieLensLink Error: " + e.getMessage(), e);
+		}
+		return result;
+	}
+	
+	public static HashMap<String, String> getMapMovieId2ImdbId() {
+		HashMap<String, String> result = new HashMap<String, String>();
+		String movieId = null, imdbId = null; 
+		ArrayList<MovieLensLinkVo> dataArr = parseMovieLensLink(DataSourceUtil.dataMovieLensFull + filenameRatings);
+		for(MovieLensLinkVo oneData : dataArr) {
+			movieId = oneData.getMovieId();
+			imdbId = oneData.getImdbId(); 
+			if(movieId != null && imdbId != null) {
+				result.put(movieId, "tt" + imdbId);
+			}
 		}
 		return result;
 	}

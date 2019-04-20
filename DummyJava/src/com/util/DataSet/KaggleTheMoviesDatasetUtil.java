@@ -80,7 +80,7 @@ public class KaggleTheMoviesDatasetUtil {
 				releaseDate = sdf.parse(oneData.getRelease_date());
 			} catch (Exception e) {
 //				logger.error(e.getMessage(), e);
-				logger.error("Unparseable date: " + oneData.getRelease_date());
+//				logger.error("Unparseable date: " + oneData.getRelease_date());
 			}
 			if(imdbId != null && releaseDate != null) {
 				result.put(imdbId, releaseDate);
