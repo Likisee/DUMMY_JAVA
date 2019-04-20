@@ -1,4 +1,4 @@
-package com.util;
+package com.util.DataSet;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,6 +14,8 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.bean.ColumnPositionMappingStrategy;
 import au.com.bytecode.opencsv.bean.CsvToBean;
 
+import com.util.DataSourceUtil;
+import com.util.TimeUtil;
 import com.vo.MovieLensLinkVo;
 import com.vo.MovieLensMovieVo;
 import com.vo.MovieLensRatingVo;
@@ -22,10 +24,6 @@ import com.vo.MovieLensTagVo;
 public class MovieLensUtil {
 
 	private static Log logger = LogFactory.getLog(MovieLensUtil.class);
-
-	private static String dataRoot = "D:\\DataSet\\#Running\\";
-	private static String dataMovieLendsSmall = dataRoot + "MovieLens Latest Datasets\\ml-latest-small\\";
-	private static String dataMovieLendsFull = dataRoot + "MovieLens Latest Datasets\\ml-latest\\";
 
 	private static String filenameLinks = "links.csv";
 	private static String filenameMovies = "movies.csv";
@@ -183,10 +181,6 @@ public class MovieLensUtil {
 	
 	// ================================================================================================================================================
 	// ================================================================================================================================================
-
-	
-	// ================================================================================================================================================
-	// ================================================================================================================================================
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -201,7 +195,7 @@ public class MovieLensUtil {
 			// Default seperator is comma
 			// Default quote character is double quote
 			// Start reading from line number 2 (line numbers start from zero)
-			CSVReader reader = new CSVReader(new FileReader(dataMovieLendsFull + filenameRatings), ',', '"', 1);
+			CSVReader reader = new CSVReader(new FileReader(DataSourceUtil.dataMovieLensFull + filenameRatings), ',', '"', 1);
 
 			// Method 1 (faster for large-size file)
 			// Read CSV line by line and use the string array as you want
