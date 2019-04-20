@@ -60,6 +60,16 @@ public class Test {
 		logger.info("csu test 3");
 		logger.info("value: " + JSONArray.fromObject(new ArrayList<String>()));
 		
+		// csu test 4		
+		ArrayList<ArrayList<Integer>> big = new ArrayList<ArrayList<Integer>>();
+		ArrayList<Integer> oneBig = new ArrayList<Integer>();
+		oneBig.add(1);
+		oneBig.add(2);
+		big.add(oneBig);
+		big.add(oneBig);
+		Integer[][] result = CollectionUtil.getArrayList2Array(big);
+		logger.info(result);
+		
 	}
 
 }
