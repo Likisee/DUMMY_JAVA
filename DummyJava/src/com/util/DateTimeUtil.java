@@ -7,9 +7,9 @@ import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class TimeUtil {
+public class DateTimeUtil {
 
-	private static Log logger = LogFactory.getLog(TimeUtil.class);
+	private static Log logger = LogFactory.getLog(DateTimeUtil.class);
 
 	public final static String strDate = "yyyy-MM-dd";
 	public final static String strDateTime = "yyyy-MM-dd hh:mm:ss";

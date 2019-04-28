@@ -17,7 +17,7 @@ import au.com.bytecode.opencsv.bean.ColumnPositionMappingStrategy;
 import au.com.bytecode.opencsv.bean.CsvToBean;
 
 import com.util.DataSourceUtil;
-import com.util.TimeUtil;
+import com.util.DateTimeUtil;
 import com.vo.KaggleTheMoviesDataSetMoviesMetadataVo;
 
 public class KaggleTheMoviesDatasetUtil {
@@ -71,7 +71,7 @@ public class KaggleTheMoviesDatasetUtil {
 		HashMap<String, Date> result = new HashMap<String, Date>();
 		String imdbId = null; 
 		Date releaseDate = null;
-		SimpleDateFormat sdf = TimeUtil.getSimpleDateTime(null);
+		SimpleDateFormat sdf = DateTimeUtil.getSimpleDateTime(null);
 		ArrayList<KaggleTheMoviesDataSetMoviesMetadataVo> dataArr = parseKaggleTheMoviesDatasetMoviesMetadata(DataSourceUtil.dataKggleTheMoviesDataset + filenameMoviesMetadata);
 		for(KaggleTheMoviesDataSetMoviesMetadataVo oneData : dataArr) {
 			imdbId = oneData.getImdb_id(); 

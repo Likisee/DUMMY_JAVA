@@ -51,7 +51,7 @@ public class MathUtil {
 
 	public static Double getMedian(ArrayList<Double> dataList) {
 		Double result = null;
-		if (dataList != null) {
+		if (dataList != null && dataList.size() > 0) {
 			Collections.sort(dataList);
 			if (dataList.size() % 2 == 0) {
 				result = (dataList.get((dataList.size() - 2) / 2) + dataList.get((dataList.size() - 2) / 2 + 1)) / 2.0;
@@ -105,6 +105,13 @@ public class MathUtil {
 		return result;
 	}
 	
+	public static int getDaysWithin(double val){
+		if(val < 0) {
+			return (int) Math.floor(val);
+		} else {
+			return (int) (Math.floor(val) + 1);
+		}
+	}
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

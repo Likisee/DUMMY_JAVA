@@ -70,6 +70,10 @@ public class Test {
 		Integer[][] result = CollectionUtil.getArrayList2Array(big);
 		logger.info(result);
 		
+		// csu test 5		
+		logger.info(MathUtil.getDaysWithin(0.1));
+		logger.info(MathUtil.getDaysWithin(-0.1));		
 	}
 
 }
+

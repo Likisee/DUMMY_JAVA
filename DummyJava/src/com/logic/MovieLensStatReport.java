@@ -8,10 +8,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import net.sf.json.JSONArray;
 
@@ -22,12 +24,14 @@ import au.com.bytecode.opencsv.CSVReader;
 
 import com.constant.Const;
 import com.util.CollectionUtil;
+import com.util.DataSourceUtil;
+import com.util.DateTimeUtil;
 import com.util.FileUtil;
 import com.util.HBaseUtil;
 import com.util.MathUtil;
-import com.util.DataSourceUtil;
 import com.util.StringUtil;
-import com.util.TimeUtil;
+import com.util.DataSet.KaggleTheMoviesDatasetUtil;
+import com.util.DataSet.MovieLensUtil;
 
 public class MovieLensStatReport {
 
@@ -103,7 +107,7 @@ public class MovieLensStatReport {
 			}
 		}
 
-		SimpleDateFormat sdf = TimeUtil.getSimpleDateTime(null);
+		SimpleDateFormat sdf = DateTimeUtil.getSimpleDateTime(null);
 		StringBuffer sbResult = new StringBuffer();
 		for (Map.Entry<Integer, ArrayList<String>> entry : mapUserIdCntRank.entrySet()) {
 			count = entry.getKey();
@@ -174,7 +178,7 @@ public class MovieLensStatReport {
 			}
 		}
 
-		SimpleDateFormat sdf = TimeUtil.getSimpleDateTime(null);
+		SimpleDateFormat sdf = DateTimeUtil.getSimpleDateTime(null);
 		StringBuffer sbResult = new StringBuffer();
 		for (Map.Entry<Integer, ArrayList<String>> entry : mapMovieIdCntRank.entrySet()) {
 			count = entry.getKey();
@@ -196,7 +200,7 @@ public class MovieLensStatReport {
 			CSVReader reader = new CSVReader(new FileReader(filePath), ',', '"', 1);
 			String[] nextLine;
 			Long timestamp;
-			SimpleDateFormat sdf = TimeUtil.getSimpleDateTime(null);
+			SimpleDateFormat sdf = DateTimeUtil.getSimpleDateTime(null);
 			String date;
 			while ((nextLine = reader.readNext()) != null) {
 				if (nextLine != null) {
@@ -306,7 +310,7 @@ public class MovieLensStatReport {
 
 		// initiate timestampMin, timestampMax for the null handling
 		// initiate ratingTimestampSet (reduce computational cost)
-		SimpleDateFormat sdf = TimeUtil.getSimpleDateTime(null);
+		SimpleDateFormat sdf = DateTimeUtil.getSimpleDateTime(null);
 		long timestamp;
 		long timestampMin = Long.MAX_VALUE, timestampMax = Long.MIN_VALUE;
 		HashSet<Long> ratingTimestampSet = new HashSet<Long>();
@@ -605,7 +609,7 @@ public class MovieLensStatReport {
 		return rankUserPairs;
 	}
 	
-	private static void getUserPairHistory(String filePathRatings, int count, String userPair, String fileMovieInfo) {
+	private static void getUserPairHistory(String filePathRatings, int count, String userPair) {
 		// initiate fileList
 		File file = new File(filePathRatings);
 
@@ -620,7 +624,7 @@ public class MovieLensStatReport {
 		// parse file
 		String userId, movieId, rating;
 		long timestamp;
-		SimpleDateFormat sdf = TimeUtil.getSimpleDateTime(null);
+		SimpleDateFormat sdf = DateTimeUtil.getSimpleDateTime(null);
 		StringBuffer content = new StringBuffer("");
 		int cntLarger = 0, cntSmaller = 0;
 		if (file.exists()) {
@@ -662,12 +666,12 @@ public class MovieLensStatReport {
 								}
 							}
 						} catch (Exception e) {
-							logger.error("MovieLensStatReport.loadRatingsMapUserId2MovieId Error: " + e.getMessage(), e);
+							logger.error("MovieLensStatReport.getUserPairHistory Error: " + e.getMessage(), e);
 						}
 					}
 				}
 			} catch (Exception e) {
-				logger.error("MovieLensStatReport.loadRatingsMapUserId2MovieId Error: " + e.getMessage(), e);
+				logger.error("MovieLensStatReport.getUserPairHistory Error: " + e.getMessage(), e);
 			}
 			
 			if(cntLarger > 0 && cntSmaller > 0) {
@@ -678,6 +682,166 @@ public class MovieLensStatReport {
 				logger.info(count + "~" + userId1 + "~" + userId2 + "~" + cntLarger + "~" + cntSmaller + ".txt");;
 			}
 		}
+	}
+	
+	private static void getUserPairHistory(String filePathRatings, ArrayList<String> userIdList, HashMap<String, Long> mapMovieId2ReleaseLong) {
+		// initiate fileList
+		File file = new File(filePathRatings);
+
+		// initiate mapRatingTimestampOffset, mapMovieIdUserIdSet
+		HashMap<String, Long> mapRatingTimestampOffset = new HashMap<String, Long>(); // HashMap<String movieId~|userId, Long ratingTimestampOffset>
+		HashMap<String, TreeSet<Integer>> mapMovieIdUserIdSet = new HashMap<String, TreeSet<Integer>>();
+
+		// parse file
+		String userId, movieId, rating;
+		long timestamp, releaseTimestamp, offset;
+		if (file.exists()) {
+			try {
+				CSVReader reader = new CSVReader(new FileReader(file), ',', '"', 1);
+				String[] nextLine;
+				while ((nextLine = reader.readNext()) != null) {
+					if (nextLine != null) {
+						try {
+							userId = nextLine[0];
+							movieId = nextLine[1];
+							rating = nextLine[2];
+							timestamp = Long.valueOf(nextLine[3]);
+							if(mapMovieId2ReleaseLong.containsKey(movieId)) {
+								releaseTimestamp = mapMovieId2ReleaseLong.get(movieId);
+								offset = timestamp - releaseTimestamp; 
+								
+								mapRatingTimestampOffset.put(HBaseUtil.getStringConcate(movieId, userId), offset);
+								if(mapMovieIdUserIdSet.containsKey(movieId)) {
+									mapMovieIdUserIdSet.get(movieId).add(Integer.valueOf(userId));
+								} else {
+									TreeSet<Integer> userIdSet = new TreeSet<Integer>();
+									userIdSet.add(Integer.valueOf(userId));
+									mapMovieIdUserIdSet.put(movieId, userIdSet);
+								}
+							}
+						} catch (Exception e) {
+							logger.error("MovieLensStatReport.getUserPairHistory Error: " + e.getMessage(), e);
+						}
+					}
+				}
+			} catch (Exception e) {
+				logger.error("MovieLensStatReport.getUserPairHistory Error: " + e.getMessage(), e);
+			}
+		}
+		
+		// initiate mapCoRatingCount, mapCoRatinOffsetgCount
+		HashMap<String, Integer> mapCoRatingCount = new HashMap<String, Integer>(); // HashMap<String userId1~|userId2, Integer count>
+		HashMap<String, HashMap<Integer, Integer>> mapCoRatingOffsetCount = new HashMap<String, HashMap<Integer, Integer>>(); // HashMap<String userId1~|userId2, HashMap<Integer offset, Integer count>>
+		HashMap<String, HashMap<Integer, Integer>> mapCoRatingAbsOffsetCount = new HashMap<String, HashMap<Integer, Integer>>(); // HashMap<String userId1~|userId2, HashMap<Integer ABS(offset), Integer count>>
+		
+		// mapRatingTimestampOffset + mapMovieIdUserIdSet = mapCoRatingCount, mapCoRatinOffsetCount
+		String userIdPair;
+		int daysWithin;
+		long daysOffset1, daysOffset2;
+		HashMap<Integer, Integer> data = null;
+		for(Map.Entry<String, TreeSet<Integer>> entry : mapMovieIdUserIdSet.entrySet()) {
+			movieId = entry.getKey();
+			for(Integer userId1 : entry.getValue()) {
+				for(Integer userId2 : entry.getValue()) {
+					if(userId1 < userId2) {
+						
+						// mapCoRatingCount
+						userIdPair = HBaseUtil.getStringConcate(userId1 + "", userId2 + "");
+						if(mapCoRatingCount.containsKey(userIdPair)) {
+							mapCoRatingCount.put(userIdPair, mapCoRatingCount.get(userIdPair) + 1);
+						} else {
+							mapCoRatingCount.put(userIdPair, 1);
+						}
+						
+						// mapCoRatingOffsetCount, mapCoRatingAbsOffsetCount
+						daysOffset1 = mapRatingTimestampOffset.get(HBaseUtil.getStringConcate(movieId, userId1 + ""));
+						daysOffset2 = mapRatingTimestampOffset.get(HBaseUtil.getStringConcate(movieId, userId2 + ""));
+						daysWithin = MathUtil.getDaysWithin((daysOffset2 - daysOffset1) / 60 / 60 / 24);
+						if(mapCoRatingOffsetCount.containsKey(userIdPair)) {
+							data = mapCoRatingOffsetCount.get(userIdPair);
+						} else {
+							data = new HashMap<Integer, Integer>();
+						}
+						if(data.containsKey(daysWithin)) {
+							data.put(daysWithin, data.get(daysWithin) + 1);
+						} else {
+							data.put(daysWithin, 1);
+						}
+						mapCoRatingOffsetCount.put(userIdPair, data);
+						
+						daysWithin = Math.abs(daysWithin);
+						if(mapCoRatingAbsOffsetCount.containsKey(userIdPair)) {
+							data = mapCoRatingAbsOffsetCount.get(userIdPair);
+						} else {
+							data = new HashMap<Integer, Integer>();
+						}
+						if(data.containsKey(daysWithin)) {
+							data.put(daysWithin, data.get(daysWithin) + 1);
+						} else {
+							data.put(daysWithin, 1);
+						}
+						mapCoRatingAbsOffsetCount.put(userIdPair, data);
+					}
+				}
+			}
+		}
+		
+		// TODO get quartile
+		// get median
+		ArrayList<Double> countList = new ArrayList<Double>();
+		for(Map.Entry<String, Integer> entry :mapCoRatingCount.entrySet()) {
+			countList.add((double) entry.getValue());
+		}
+		Double countMedian = MathUtil.getMedian(countList);
+
+		StringBuffer content = new StringBuffer("");
+		for(countMedian = 10.0; countMedian <= 600; countMedian = countMedian + 10) {
+
+			// dump report
+			int [] countArr = new int[201];
+			for(int i = 0; i < userIdList.size(); i++) {
+				for(int j = i + 1; j < userIdList.size(); j++) {
+					String userId1 = userIdList.get(i);
+					String userId2 = userIdList.get(j);
+					userIdPair = HBaseUtil.getStringConcate(userId1 + "", userId2 + "");
+//					logger.info(userIdPair + " is processing.");
+					if(mapCoRatingCount.containsKey(userIdPair)
+							&& mapCoRatingCount.get(userIdPair) > countMedian) {
+						
+						int totalCount = mapCoRatingCount.get(userIdPair);
+						
+						countArr[0] += totalCount;
+						
+						data = mapCoRatingAbsOffsetCount.get(userIdPair);
+						for(Map.Entry<Integer, Integer> entry : data.entrySet()) {
+							for(int days = 1; days <= 200; days++) { // 0 is impossible
+								if(entry.getKey() <= days) {
+									countArr[days] += entry.getValue();
+								}
+							}
+						}
+					}
+				}	
+			}
+			content.append(countMedian + ",");
+			content.append(countArr[0] + ",");
+			for(int i = 1; i < countArr.length; i++) {
+				content.append(Double.valueOf(countArr[i]) / countArr[0] + ",");
+			}
+			content.append(Const.lineBrakeSep);
+		}
+
+		// save report
+		StringBuffer header = new StringBuffer("");
+		header.append("PairTotalCountUpperThan" + ",");
+		header.append("SumTotalCount" + ",");
+		for(int days = 1; days <= 200; days++) {
+			header.append(days + ",");
+		}
+		header.append(Const.lineBrakeSep);
+		String filename = "getUserPairHistory_20190421.txt";
+		File fileExport = new File(file.getParent() + File.separator + DataSourceUtil.dataExport + "UserPairHistory" + File.separator + filename + ".csv");
+		FileUtil.writeStringToFile(fileExport, header.toString() + content.toString());
 	}
 	
 	// 爆力法
@@ -816,16 +980,28 @@ public class MovieLensStatReport {
 //		digestUserIdBasedMatrix(dataMovieLensSmall + ResourceUtil.dataExport + "UserIdBasedMatrix");
 
 		// 2019/04/07
-		TreeMap<Integer, HashSet<String>> rankUserPairs = getRankUserPairs(DataSourceUtil.dataMovieLensSmall + DataSourceUtil.dataExport + "UserIdBasedMatrix", 10, 10);
-		for (Map.Entry<Integer, HashSet<String>> entry : rankUserPairs.entrySet()) {
-			int count = entry.getKey();
-			if (count >= 50) {
-				for (String userPair : entry.getValue()) {
-					getUserPairHistory(DataSourceUtil.dataMovieLensSmall + filenameRatings, count, userPair, null);
-				}
-			}
-		}		
+//		TreeMap<Integer, HashSet<String>> rankUserPairs = getRankUserPairs(DataSourceUtil.dataMovieLensSmall + DataSourceUtil.dataExport + "UserIdBasedMatrix", 10, 10);
+//		for (Map.Entry<Integer, HashSet<String>> entry : rankUserPairs.entrySet()) {
+//			int count = entry.getKey();
+//			if (count > 49) {
+//				for (String userPair : entry.getValue()) {
+//					getUserPairHistory(DataSourceUtil.dataMovieLensSmall + filenameRatings, count, userPair);
+//				}
+//			}
+//		}
 		
+		// 2019/04/20
+		HashMap<String, String> mapMovieId2ImdbId =MovieLensUtil.getMapMovieId2ImdbId();
+		HashMap<String, Date> mapImdbId2ReleaseDate = KaggleTheMoviesDatasetUtil.getMapImdbId2ReleaseDate();
+		HashMap<String, Long> mapMovieId2ReleaseLong = new HashMap<String ,Long>();
+		for(Map.Entry<String ,String> entry : mapMovieId2ImdbId.entrySet()) {
+			String imdbId = "tt" + entry.getValue();
+			if(mapImdbId2ReleaseDate.containsKey(imdbId)) {
+				mapMovieId2ReleaseLong.put(entry.getKey(), mapImdbId2ReleaseDate.get(imdbId).getTime() / 1000); // 可拿來限制MovieId
+			}
+		}
+		getUserPairHistory(DataSourceUtil.dataMovieLensSmall + filenameRatings, userIdList, mapMovieId2ReleaseLong);
+
 		/* Full */
 //		exportTopRatingUserId(DataSourceUtil.dataMovieLensFull + filenameRatings);
 //		exportTopRatingMovieId(DataSourceUtil.dataMovieLensFull + filenameRatings);

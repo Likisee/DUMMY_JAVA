@@ -17,7 +17,7 @@ import au.com.bytecode.opencsv.bean.ColumnPositionMappingStrategy;
 import au.com.bytecode.opencsv.bean.CsvToBean;
 
 import com.util.DataSourceUtil;
-import com.util.TimeUtil;
+import com.util.DateTimeUtil;
 import com.vo.KaggleTheMoviesDataSetMoviesMetadataVo;
 import com.vo.MovieLensLinkVo;
 import com.vo.MovieLensMovieVo;
@@ -103,12 +103,12 @@ public class MovieLensUtil {
 	public static HashMap<String, String> getMapMovieId2ImdbId() {
 		HashMap<String, String> result = new HashMap<String, String>();
 		String movieId = null, imdbId = null; 
-		ArrayList<MovieLensLinkVo> dataArr = parseMovieLensLink(DataSourceUtil.dataMovieLensFull + filenameRatings);
+		ArrayList<MovieLensLinkVo> dataArr = parseMovieLensLink(DataSourceUtil.dataMovieLensFull + filenameLinks);
 		for(MovieLensLinkVo oneData : dataArr) {
 			movieId = oneData.getMovieId();
 			imdbId = oneData.getImdbId(); 
 			if(movieId != null && imdbId != null) {
-				result.put(movieId, "tt" + imdbId);
+				result.put(movieId, imdbId);
 			}
 		}
 		return result;
@@ -149,13 +149,13 @@ public class MovieLensUtil {
 	public static ArrayList<MovieLensRatingVo> parseMovieLensRating(String directoryPath, String date, int daysPres, int daysAfter) {
 		ArrayList<MovieLensRatingVo> result = new ArrayList<MovieLensRatingVo>();
 		ArrayList<MovieLensRatingVo> resultTemp = null;
-		int now = (int) TimeUtil.parseByDefaultSimpleDateTime(date).getTime() / 1000 / 60 / 60 / 24;
+		int now = (int) DateTimeUtil.parseByDefaultSimpleDateTime(date).getTime() / 1000 / 60 / 60 / 24;
 		int nowPres = now - daysPres;
 		int nowAfter = now + daysAfter;
-		SimpleDateFormat sdf = TimeUtil.getSimpleDateTime(null);
+		SimpleDateFormat sdf = DateTimeUtil.getSimpleDateTime(null);
 		File file = null;
 		for (int i = nowPres; i <= nowAfter; i++) {
-			file = new File(directoryPath + sdf.format(TimeUtil.getIntDateToDate(i)));
+			file = new File(directoryPath + sdf.format(DateTimeUtil.getIntDateToDate(i)));
 			if(file.exists()) {
 				resultTemp = parseMovieLensRating(file);
 				result.addAll(resultTemp);
